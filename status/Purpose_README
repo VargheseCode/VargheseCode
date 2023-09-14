@@ -1,0 +1,31 @@
+I want to show how I initially organized my directory 
+before transforming it in a way that Anas and I can both work using the same script 
+because of the way that our directories are set up. I have to reconfigure the loading 
+method 
+
+This is how my directory is set up: 
+Stim and Nostim files are separated and labeled by the subject name and ID
+that way the files can just be read using just for loops and nothing else
+
+Anas Directory Setup:
+All files of a subject is one folder
+that way access to all relevant files is easier 
+He puts softcodes the loading variables 
+Ex. 
+        baseDir = 'C:\Users\alexv\Box\Lab work\Anas\'; % Set to where you stored the data
+        subjectID = 'DLPFC023';
+        subnum = 1;
+        fname = 'lfp2';
+        %% Load and preprocess ECOG data
+        [INFO,ECOG_nostim,trials] = PreProcessECOG(subjectID,fname,baseDir);
+
+        function [INFO,ECOG_data,trials,FileInfo] = PreProcessECOG(subjectID,fname,baseDir)
+
+                  % Load INFO file and data files
+                  INFO = LoadInfoFile; % Load INFO file from Box Drive
+                  subjectPath = [baseDir subjectID '/'];
+                  taskfile = dir([subjectPath fname '*taskdata.mat']);
+                  S = load([subjectPath taskfile.name],'trials','restperiods');
+                  trials = S.trials;
+                  load([subjectPath fname '.mat'],'Data','FileInfo')
+
