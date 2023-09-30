@@ -1,0 +1,156 @@
+clc
+clear
+
+%% Reading the data from the txt.file from Egly
+filename = 'LOG_Full_Task_Test1.txt';
+A = importdata(filename);
+
+
+for indx = 1:length(A.rowheaders)
+    logFile(indx).responseName = A.rowheaders(indx);
+    logFile(indx).responseTime = A.data(indx);
+end
+
+%% Accurate Trials
+fixo_idx = ((contains(string([logFile.responseName]),'fixo')));
+fixo = find(fixo_idx);
+
+target_idx = (contains(string([logFile.responseName]),'targ'));
+target = find(target_idx);
+
+resp_idx = (contains(string([logFile.responseName]),'resp'));
+resp = find(resp_idx);
+
+respFixo_indx = ismember((fixo+4),(resp));
+respFixo = find(respFixo_indx);
+
+accurateTrials = fixo(respFixo);
+inaccurateTrials = setdiff(fixo,accurateTrials);
+
+for idx = 1:length(accurateTrials)
+    logFile(accurateTrials(idx)).Status = "Accurate";
+end
+
+for idx = 1:length(inaccurateTrials)
+    logFile(inaccurateTrials(idx)).Status = "InAccurate";
+end
+
+%% Catch Trials
+fixoCt_idx = (((string([logFile.responseName])=='fixo_ct')));
+fixoCt = find(fixoCt_idx);
+
+for idx = 1:length(fixoCt)
+    logFile(fixoCt(idx)).Status = "Catch Trial"
+end
+
+%% Task Conflict Trials
+
+fixoTC_idx = (((string([logFile.responseName])=='fixo_tc')));
+fixoTC = find(fixoTC_idx);
+
+for idx = 1:length(fixoTC)
+    logFile(fixoTC(idx)).Status = "Task Conflict"
+end
+
+%% Orientation
+targToStart = target - 3;
+holdString = '';
+string = '';
+
+for idx = 1:length(target)
+    holdString = char(logFile(target(idx)).responseName)
+    if holdString(1) == 'v'
+        logFile(targToStart(idx)).Validity = "Valid"
+        if holdString(2) == 'h'
+            logFile(targToStart(idx)).Orientation = "Horizontal"
+        else
+            logFile(targToStart(idx)).Orientation = "Vertical"
+        end
+    else holdString(1) == 'i'
+        logFile(targToStart(idx)).Validity = "Invalid"
+        if holdString(2) == ' '
+            logFile(targToStart(idx)).Objectivity = "same equi and same cue"
+        elseif holdString(2) == 's'
+            logFile(targToStart(idx)).Objectivity = "Same Object"
+        elseif holdString(2) == 'd'
+            logFile(targToStart(idx)).Objectivity = "Different Object"
+        end
+
+        if (holdString(3) =='h')
+            logFile(targToStart(idx)).Orientation = "Horizontal"
+        elseif (holdString(3) =='v')
+            logFile(targToStart(idx)).Orientation = "Vertical"
+        end
+    end
+
+    if holdString(end-1:end) == 'UR'
+        logFile(targToStart(idx)).CueLocation = "UR"
+    elseif   holdString(end-1:end) == 'UL'
+        logFile(targToStart(idx)).CueLocation = "UL";
+    elseif   holdString(end-1:end) == 'LR'
+        logFile(targToStart(idx)).CueLocation = "LR"
+    elseif   holdString(end-1:end) == 'LL'
+        logFile(targToStart(idx)).CueLocation = "LL"
+    end
+end
+
+reactionTime = zeros(size(accurateTrials))
+
+for idx = 1:length(reactionTime)
+    reactionTime(idx) = logFile(accurateTrials(idx)+4).responseTime - logFile(accurateTrials(idx)+3).responseTime
+    logFile(accurateTrials(idx)).reactionTime = reactionTime(idx);
+end
+
+% trialTime = zeros(size(accurateTrials))
+% 
+% % for idx = 1:length(trialTime)
+% %     trialTime(idx) = logFile(accurateTrials(idx)+4).responseTime - logFile(accurateTrials(idx)).responseTime
+% %     logFile(accurateTrials(idx)).TotalTrialTime = trialTime(idx);
+% % end
+
+
+% barTime = zeros(size(accurateTrials))
+% 
+% for idx = 1:length(trialTime)
+%     barTime(idx) = logFile(accurateTrials(idx)+1).responseTime - logFile(accurateTrials(idx)).responseTime
+%     logFile(accurateTrials(idx)).barTime = barTime(idx);
+% end
+
+% cueTime = zeros(size(accurateTrials))
+% 
+% for idx = 1:length(trialTime)
+%     cueTime(idx) = logFile(accurateTrials(idx)+2).responseTime - logFile(accurateTrials(idx)).responseTime
+%     logFile(accurateTrials(idx)).cueTime = cueTime(idx);
+% end
+% 
+% cueToTarget =  zeros(size(accurateTrials));
+% for idx = 1:length(cueToTarget)
+%     cueToTarget(idx) = logFile(accurateTrials(idx)+3).responseTime - logFile(accurateTrials(idx)+2).responseTime
+%     logFile(accurateTrials(idx)).cueToTarget = cueToTarget(idx);
+% end
+% 
+% cueToTarget =  zeros(size(accurateTrials));
+% for idx = 1:length(cueToTarget)
+%     cueToTarget(idx) = logFile(accurateTrials(idx)+3).responseTime - logFile(accurateTrials(idx)+2).responseTime
+%     logFile(accurateTrials(idx)).cueToTarget = cueToTarget(idx);
+% end
+
+
+task_data = struct;
+
+for i = 1:length(fixo)
+    task_data(i).Status =  logFile(fixo(i)).Status
+    task_data(i).Validity =  logFile(fixo(i)).Validity
+    task_data(i).Orientation =  logFile(fixo(i)).Orientation
+    task_data(i).CueLocation =  logFile(fixo(i)).CueLocation
+    task_data(i).Objectivity =  logFile(fixo(i)).Objectivity
+    task_data(i).ReactionTime =  logFile(fixo(i)).reactionTime
+
+    % task_data(i).TotalTrialTime =  logFile(fixo(i)).TotalTrialTime
+    % task_data(i).barTime =  logFile(fixo(i)).barTime
+    % task_data(i).cueTime =  logFile(fixo(i)).cueTime
+    % task_data(i).clockTime =  logFile(fixo(i)).responseTime
+    % task_data(i).cueToTarget =  logFile(fixo(i)).cueToTarget
+end
+
+clearvars -except task_data 
